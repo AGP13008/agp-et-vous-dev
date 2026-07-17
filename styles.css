@@ -39,4 +39,6 @@
 .result small{display:block;margin-top:12px;color:#64748b}
 .admin-actions .confirm-delete{background:#a52a22;color:#fff}
 .own-account{color:#246e38;font-size:.82rem;font-weight:800;padding:8px 0}
+.join-actions{display:grid;gap:12px;margin-top:22px}.signup-sheet{max-height:92vh;overflow:auto}.signup-sheet label{display:grid;gap:6px;margin:12px 0;font-weight:800;font-size:.8rem}.signup-sheet input{padding:13px;border:1px solid #dfe4ea;border-radius:12px;font:inherit}.name-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-help{color:var(--muted);margin-top:0}.success-message{color:#246e38;background:#e4f6e9;padding:12px;border-radius:12px;font-weight:800}.signup-sheet button:disabled{opacity:.6}
+@media(max-width:520px){.name-fields{grid-template-columns:1fr}}
 @media(max-width:620px){body{padding-bottom:132px}.shell{padding-bottom:132px}.section-title{align-items:flex-start;gap:12px}.member-add{font-size:.85rem;padding:10px}.admin-actions{flex-wrap:wrap}}

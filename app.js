@@ -1,11 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
 const $ = id => document.getElementById(id), views = [...document.querySelectorAll("[data-view]")];
-let currentUser = null, currentRole = null, adminSection = "activities", editingId = null;
+let currentUser = null, currentRole = null, adminSection = "activities", editingId = null, registrationInProgress = false;
 const config = {
   activities: { collection: "publicActivities", title: "Activités", singular: "activité" },
   classifieds: { collection: "classifieds", title: "Entre voisins", singular: "annonce" },
@@ -20,11 +20,13 @@ const inputDate = value => { if (!value) return ""; const d = asDate(value); ret
 
 function route(name) { views.forEach(v => v.classList.toggle("active", v.dataset.view === name)); document.querySelectorAll(".bottom [data-route]").forEach(b => b.classList.toggle("active", b.dataset.route === name)); scrollTo({top:0,behavior:"smooth"}); }
 function openLogin(){ $("loginModal").classList.add("open"); } function closeLogin(){ $("loginModal").classList.remove("open"); }
+function openSignup(){ $("signupMessage").textContent="";$("signupModal").classList.add("open"); } function closeSignup(){ $("signupModal").classList.remove("open"); }
 function message(text, kind="success"){ const box=$("adminMessage"); box.textContent=text; box.className=`admin-message ${kind}`; box.hidden=false; setTimeout(()=>box.hidden=true,4500); }
 document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>route(b.dataset.route)); document.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeLogin);
-$("homeLogin").onclick=openLogin; $("authButton").onclick=()=>currentUser?route(currentRole==="admin"?"admin":"member"):openLogin;
+$("homeLogin").onclick=openLogin; $("authButton").onclick=()=>currentUser?route(currentRole==="admin"?"admin":"member"):openLogin;$("requestAccess").onclick=openSignup;document.querySelectorAll("[data-signup-close]").forEach(b=>b.onclick=closeSignup);
 $("loginForm").onsubmit=async e=>{e.preventDefault();$("loginError").textContent="";try{await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value);closeLogin();}catch{$("loginError").textContent="Adresse e-mail ou mot de passe incorrect.";}};
 $("resetPassword").onclick=async()=>{const mail=$("email").value.trim();if(!mail)return $("loginError").textContent="Saisissez d’abord votre adresse e-mail.";try{await sendPasswordResetEmail(auth,mail);$("loginError").textContent="E-mail de réinitialisation envoyé.";}catch{$("loginError").textContent="Impossible d’envoyer l’e-mail.";}};
+$("signupForm").onsubmit=async e=>{e.preventDefault();const button=$("signupSubmit"),messageBox=$("signupMessage");button.disabled=true;button.textContent="Envoi…";messageBox.textContent="";registrationInProgress=true;try{const credential=await createUserWithEmailAndPassword(auth,$("signupEmail").value.trim(),$("signupPassword").value);await setDoc(doc(db,"users",credential.user.uid),{firstName:$("signupFirstName").value.trim(),lastName:$("signupLastName").value.trim(),email:credential.user.email,role:"pending",createdAt:serverTimestamp()});await signOut(auth);messageBox.className="success-message";messageBox.textContent="Demande envoyée. L’AGP vous informera lorsque votre accès sera activé.";e.currentTarget.reset();}catch(error){console.error(error);messageBox.className="error";messageBox.textContent=error.code==="auth/email-already-in-use"?"Un compte existe déjà avec cette adresse.":"Impossible de créer le compte. Vérifiez les informations saisies.";}finally{registrationInProgress=false;button.disabled=false;button.textContent="Envoyer ma demande";}};
 $("logoutMember").onclick=$("logoutAdmin").onclick=async()=>{await signOut(auth);route("home");};
 $("openMemberSpace").onclick=()=>{route("member");loadDashboard();}; $("refreshDashboard").onclick=loadDashboard;
 document.querySelectorAll("[data-member-section]").forEach(b=>b.onclick=()=>{if(!currentUser)return openLogin();route("member");loadMemberSection(b.dataset.memberSection);});
@@ -33,6 +35,7 @@ $("newItem").onclick=()=>openEditor(); $("closeEditor").onclick=$("cancelEditor"
 $("adminList").onclick=handleAdminAction; $("privateResults").onclick=handleMemberAction;
 
 onAuthStateChanged(auth, async user=>{
+  if(registrationInProgress)return;
   currentUser=user; currentRole=null;
   if(!user){$("authButton").textContent="Se connecter";$("statusText").textContent="Association du Grand Pavois";return;}
   $("authButton").textContent="Mon espace";$("statusText").textContent=user.email;
