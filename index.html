@@ -21,7 +21,7 @@
   </div>
   <div class="content">
     <section class="block"><span class="eyebrow">À LA UNE</span><h2>Dernières informations</h2>
-      <article class="card row"><div class="emoji">☕</div><div><span class="pill">Vie de l'association</span><h3>Café des voisins</h3><p>Chaque jeudi de 15 h à 17 h à L'Appart, 331 avenue du Prado.</p></div></article>
+      <div id="publicNewsList" class="public-list"><div class="empty-public">Chargement des actualités…</div></div>
     </section>
     <section class="private">
       <div class="private-title"><div><span>ESPACE ADHÉRENTS</span><h2>Services privés</h2></div><b>🔒</b></div>
@@ -37,7 +37,7 @@
 </section>
 
 <section class="view" data-view="activities"><div class="cover"><img src="assets/prado.jpg" alt=""><div class="shade"></div><div><span>AGENDA</span><h1>Activités</h1></div></div>
-<div class="content block"><article class="card row"><div class="date"><b>JEU</b><span>15–17 h</span></div><div><span class="pill">Chaque semaine</span><h3>Café des voisins</h3><p>L'Appart — 331 avenue du Prado</p><button class="secondary protected">Je participe</button></div></article></div></section>
+<div class="content block"><div id="publicActivitiesList" class="public-list"><div class="empty-public">Chargement des activités…</div></div></div></section>
 
 <section class="view" data-view="join"><div class="cover"><img src="assets/tour.jpg" alt=""><div class="shade"></div><div><span>L'ASSOCIATION</span><h1>Adhérer</h1></div></div>
 <div class="content block"><h2>Pourquoi adhérer ?</h2><p>L'AGP crée du lien entre les copropriétaires résidents et propose des activités, de l'entraide et des services utiles.</p><button class="primary full" disabled>HelloAsso sera ajouté plus tard</button></div></section>
@@ -54,9 +54,40 @@
 </div>
 <div id="privateResults" class="results"></div></div></section>
 
-<section class="view" data-view="admin"><div class="shell"><div class="head"><div><span>ADMINISTRATION</span><h1>Tableau de bord</h1></div><button id="logoutAdmin">Déconnexion</button></div>
-<div class="notice">Ton compte administrateur est reconnu. La création et la validation des contenus seront ajoutées dans l'étape suivante.</div>
-<div class="admin-grid"><button>＋ Nouvelle actualité</button><button>＋ Nouvelle activité</button><button>＋ Nouvel artisan</button><button>✓ Valider une annonce</button><button>✓ Valider une demande</button><button>👥 Gérer les adhérents</button></div></div></section>
+<section class="view" data-view="admin"><div class="shell">
+<div class="head"><div><span>ADMINISTRATION</span><h1>Tableau de bord</h1></div><button id="logoutAdmin">Déconnexion</button></div>
+<div id="adminMessage" class="admin-message" hidden></div>
+<div class="admin-shortcuts">
+  <button id="newNews" class="admin-primary">＋ Nouvelle actualité</button>
+  <button id="newActivity" class="admin-primary">＋ Nouvelle activité</button>
+  <button id="openMemberSpace">Voir l'espace adhérents</button>
+</div>
+
+<section id="contentEditorPanel" class="admin-panel editor-panel" hidden>
+  <div class="panel-heading"><div><span>PUBLICATION</span><h2 id="editorTitle">Nouveau contenu</h2></div><button type="button" id="closeEditorTop" class="close-panel">×</button></div>
+  <form id="contentEditor" class="content-form">
+    <input type="hidden" id="editorType">
+    <label>Titre<input id="contentTitle" type="text" maxlength="100" required></label>
+    <label>Catégorie<input id="contentCategory" type="text" maxlength="60" required></label>
+    <label>Description<textarea id="contentDescription" rows="5" maxlength="1000" required></textarea></label>
+    <div id="activityFields" class="activity-fields" hidden>
+      <label>Date<input id="contentDate" type="date"></label>
+      <label>Horaire<input id="contentTime" type="text" maxlength="40" placeholder="Ex. 15 h à 17 h"></label>
+      <label class="wide">Lieu<input id="contentLocation" type="text" maxlength="120" placeholder="Ex. L'Appart, 331 avenue du Prado"></label>
+    </div>
+    <label class="check-label"><input id="contentPublished" type="checkbox" checked> Publier immédiatement</label>
+    <div class="form-actions"><button type="button" id="cancelEditor" class="secondary-action">Annuler</button><button id="saveContent" class="primary" type="submit">Enregistrer</button></div>
+  </form>
+</section>
+
+<div id="adminContentLists" class="admin-content-grid">
+  <section class="admin-panel"><div class="panel-heading"><div><span>ACCUEIL</span><h2>Actualités</h2></div></div><div id="adminNewsList" class="admin-list"></div></section>
+  <section class="admin-panel"><div class="panel-heading"><div><span>AGENDA</span><h2>Activités</h2></div></div><div id="adminActivitiesList" class="admin-list"></div></section>
+</div>
+
+<section class="admin-panel next-features"><h2>Fonctions suivantes</h2><p>Artisans, validation des annonces, entraide et gestion des adhérents seront ajoutés sans modifier cette base.</p></section>
+<button id="openAdminSpace" hidden></button>
+</div></section>
 </main>
 
 <nav class="bottom">
