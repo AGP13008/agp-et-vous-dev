@@ -1,173 +1,59 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const views = [...document.querySelectorAll("[data-view]")];
-const nav = [...document.querySelectorAll(".bottom [data-route]")];
-const modal = document.getElementById("loginModal");
-const authButton = document.getElementById("authButton");
-const loginEmail = document.getElementById("email");
-const loginPassword = document.getElementById("password");
-const loginError = document.getElementById("loginError");
-let currentUser = null;
-let currentRole = null;
-let editingId = null;
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
+const $ = id => document.getElementById(id), views = [...document.querySelectorAll("[data-view]")];
+let currentUser = null, currentRole = null, adminSection = "activities", editingId = null;
+const config = {
+  activities: { collection: "publicActivities", title: "Activités", singular: "activité" },
+  classifieds: { collection: "classifieds", title: "Entre voisins", singular: "annonce" },
+  aid: { collection: "aid", title: "Entraide", singular: "demande" },
+  artisans: { collection: "artisans", title: "Artisans", singular: "artisan" },
+  users: { collection: "users", title: "Adhérents", singular: "adhérent" }
+};
+const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[c]);
+const asDate = value => value?.toDate ? value.toDate() : new Date(value);
+const formatDate = value => value && !Number.isNaN(asDate(value).getTime()) ? new Intl.DateTimeFormat("fr-FR", { weekday:"long", day:"numeric", month:"long" }).format(asDate(value)) : "";
+const inputDate = value => { if (!value) return ""; const d = asDate(value); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
 
-const labels = { activities: "Activités AGP", classifieds: "Entre voisins", aid: "Entraide", artisans: "Artisans recommandés" };
+function route(name) { views.forEach(v => v.classList.toggle("active", v.dataset.view === name)); document.querySelectorAll(".bottom [data-route]").forEach(b => b.classList.toggle("active", b.dataset.route === name)); scrollTo({top:0,behavior:"smooth"}); }
+function openLogin(){ $("loginModal").classList.add("open"); } function closeLogin(){ $("loginModal").classList.remove("open"); }
+function message(text, kind="success"){ const box=$("adminMessage"); box.textContent=text; box.className=`admin-message ${kind}`; box.hidden=false; setTimeout(()=>box.hidden=true,4500); }
+document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>route(b.dataset.route)); document.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeLogin);
+$("homeLogin").onclick=openLogin; $("authButton").onclick=()=>currentUser?route(currentRole==="admin"?"admin":"member"):openLogin;
+$("loginForm").onsubmit=async e=>{e.preventDefault();$("loginError").textContent="";try{await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value);closeLogin();}catch{$("loginError").textContent="Adresse e-mail ou mot de passe incorrect.";}};
+$("resetPassword").onclick=async()=>{const mail=$("email").value.trim();if(!mail)return $("loginError").textContent="Saisissez d’abord votre adresse e-mail.";try{await sendPasswordResetEmail(auth,mail);$("loginError").textContent="E-mail de réinitialisation envoyé.";}catch{$("loginError").textContent="Impossible d’envoyer l’e-mail.";}};
+$("logoutMember").onclick=$("logoutAdmin").onclick=async()=>{await signOut(auth);route("home");};
+$("openMemberSpace").onclick=()=>{route("member");loadDashboard();}; $("refreshDashboard").onclick=loadDashboard;
+document.querySelectorAll("[data-member-section]").forEach(b=>b.onclick=()=>{if(!currentUser)return openLogin();route("member");loadMemberSection(b.dataset.memberSection);});
+document.querySelectorAll("[data-admin-section]").forEach(b=>b.onclick=()=>selectAdmin(b.dataset.adminSection));
+$("newItem").onclick=()=>openEditor(); $("closeEditor").onclick=$("cancelEditor").onclick=closeEditor; $("editorForm").onsubmit=saveAdminItem;
+$("adminList").onclick=handleAdminAction; $("privateResults").onclick=handleMemberAction;
 
-function route(name) {
-  views.forEach(view => view.classList.toggle("active", view.dataset.view === name));
-  nav.forEach(button => button.classList.toggle("active", button.dataset.route === name));
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-function openLogin() { modal.classList.add("open"); }
-function closeLogin() { modal.classList.remove("open"); }
-function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[c]); }
-function asDate(value) { return value?.toDate ? value.toDate() : new Date(value); }
-function formatDate(value, options = { weekday: "long", day: "numeric", month: "long" }) {
-  if (!value) return ""; const date = asDate(value); if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("fr-FR", options).format(date);
-}
-function toDateInput(value) {
-  if (!value) return ""; const date = asDate(value); if (Number.isNaN(date.getTime())) return "";
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000); return local.toISOString().slice(0, 10);
-}
-function showAdminMessage(text, kind = "success") {
-  const box = document.getElementById("adminMessage"); box.textContent = text; box.className = `admin-message ${kind}`; box.hidden = false;
-  window.setTimeout(() => { box.hidden = true; }, 4500);
-}
-
-document.querySelectorAll("[data-route]").forEach(button => { button.onclick = () => route(button.dataset.route); });
-document.querySelectorAll("[data-close]").forEach(button => { button.onclick = closeLogin; });
-document.getElementById("homeLogin").onclick = openLogin;
-authButton.onclick = () => currentUser ? route(currentRole === "admin" ? "admin" : "member") : openLogin();
-
-document.querySelectorAll("[data-member-section]").forEach(button => {
-  button.onclick = () => {
-    const section = button.dataset.memberSection;
-    if (!currentUser) { openLogin(); return; }
-    route("member");
-    loadMemberSection(section);
-  };
+onAuthStateChanged(auth, async user=>{
+  currentUser=user; currentRole=null;
+  if(!user){$("authButton").textContent="Se connecter";$("statusText").textContent="Association du Grand Pavois";return;}
+  $("authButton").textContent="Mon espace";$("statusText").textContent=user.email;
+  try{const snap=await getDoc(doc(db,"users",user.uid));if(!snap.exists()||!["member","admin"].includes(snap.data().role))throw new Error("denied");const profile=snap.data();currentRole=profile.role;$("memberTitle").textContent=`Bienvenue${profile.firstName?` ${profile.firstName}`:""}`;if(currentRole==="admin"){route("admin");selectAdmin("activities");}else{route("member");loadDashboard();}}
+  catch{await signOut(auth);$("loginError").textContent="Ce compte est en attente de validation ou son accès est suspendu.";openLogin();}
 });
 
-document.getElementById("loginForm").onsubmit = async event => {
-  event.preventDefault(); loginError.textContent = "";
-  try { await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value); closeLogin(); }
-  catch { loginError.textContent = "Adresse e-mail ou mot de passe incorrect."; }
-};
-document.getElementById("resetPassword").onclick = async () => {
-  const mail = loginEmail.value.trim();
-  if (!mail) { loginError.textContent = "Saisissez d'abord votre adresse e-mail."; return; }
-  try { await sendPasswordResetEmail(auth, mail); loginError.textContent = "E-mail de réinitialisation envoyé."; }
-  catch { loginError.textContent = "Impossible d'envoyer l'e-mail."; }
-};
-async function logout() { await signOut(auth); route("home"); }
-document.getElementById("logoutMember").onclick = logout;
-document.getElementById("logoutAdmin").onclick = logout;
-document.getElementById("openMemberSpace").onclick = () => { route("member"); loadMemberDashboard(); };
-document.getElementById("newActivity").onclick = () => openEditor();
-document.getElementById("manageActivities").onclick = () => document.getElementById("adminActivitiesList").scrollIntoView({ behavior: "smooth" });
-document.querySelectorAll("[data-future]").forEach(button => { button.onclick = () => showAdminMessage(`${button.dataset.future} sera développé dans une prochaine étape.`, "info"); });
-document.getElementById("cancelEditor").onclick = closeEditor;
-document.getElementById("closeEditorTop").onclick = closeEditor;
-document.getElementById("contentEditor").onsubmit = saveActivity;
-document.getElementById("adminActivitiesList").onclick = async event => {
-  const edit = event.target.closest("[data-edit]"); const remove = event.target.closest("[data-delete]");
-  if (edit) { const snap = await getDoc(doc(db, "publicActivities", edit.dataset.edit)); if (snap.exists()) openEditor(snap.id, snap.data()); }
-  if (remove) await removeActivity(remove.dataset.delete);
-};
+async function getItems(section, includeHidden=false){let ref=collection(db,config[section].collection),snap;if(!includeHidden&&["classifieds","aid"].includes(section))ref=query(ref,where("status","==","published"));try{snap=section==="activities"?await getDocs(query(ref,orderBy("eventDate","asc"))):await getDocs(ref);}catch{snap=await getDocs(ref);}return snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>includeHidden||section==="activities"?includeHidden||x.published!==false:true);}
+function upcoming(x){const d=asDate(x.eventDate);if(Number.isNaN(d.getTime()))return true;d.setHours(23,59,59,999);return d>=new Date();}
+function activityCard(x){return `<article class="member-activity-card"><div class="activity-date"><span>${escapeHtml(new Intl.DateTimeFormat("fr-FR",{month:"short"}).format(asDate(x.eventDate)).toUpperCase())}</span><b>${escapeHtml(new Intl.DateTimeFormat("fr-FR",{day:"2-digit"}).format(asDate(x.eventDate)))}</b></div><div class="activity-body"><span class="pill">${escapeHtml(x.category||"Activité AGP")}</span><h3>${escapeHtml(x.title)}</h3><p class="activity-meta">${escapeHtml([formatDate(x.eventDate),x.time,x.location].filter(Boolean).join(" · "))}</p><p>${escapeHtml(x.description)}</p></div></article>`;}
+function contentCard(section,x){const meta=section==="artisans"?[x.category,x.phone]:[x.category,x.authorName];return `<article class="result"><span class="pill">${escapeHtml(x.category||config[section].title)}</span><h3>${escapeHtml(x.title||x.name)}</h3><p>${escapeHtml(x.description||"")}</p><small>${escapeHtml(meta.filter(Boolean).join(" · "))}</small></article>`;}
+async function loadDashboard(){const box=$("memberUpcomingActivities");box.innerHTML="<div class='notice'>Chargement…</div>";$("privateResults").innerHTML="";const [acts,aid,ads,arts]=await Promise.all([getItems("activities").catch(()=>[]),getItems("aid").catch(()=>[]),getItems("classifieds").catch(()=>[]),getItems("artisans").catch(()=>[])]);const next=acts.filter(upcoming).slice(0,3);box.innerHTML=next.length?next.map(activityCard).join(""):"<div class='notice'>Aucune activité programmée pour le moment.</div>";$("aidCount").textContent=aid.length;$("classifiedsCount").textContent=ads.length;$("artisansCount").textContent=arts.length;}
+async function loadMemberSection(section){const out=$("privateResults");out.innerHTML="<div class='notice'>Chargement…</div>";try{const items=await getItems(section);const add=["classifieds","aid"].includes(section)?`<button class="primary member-add" data-member-add="${section}">＋ Proposer ${section==="aid"?"une demande":"une annonce"}</button>`:"";out.innerHTML=`<div class="section-title"><div><span>ESPACE PRIVÉ</span><h2>${config[section].title}</h2></div>${add}</div>`+(items.length?items.map(x=>section==="activities"?activityCard(x):contentCard(section,x)).join(""):"<div class='notice'>Aucun contenu publié pour le moment.</div>");}catch{out.innerHTML="<div class='notice'>Impossible de charger cette rubrique.</div>";}}
+function handleMemberAction(e){const b=e.target.closest("[data-member-add]");if(!b)return;const section=b.dataset.memberAdd;$("privateResults").innerHTML=`<section class="admin-panel"><div class="panel-heading"><div><span>PROPOSITION</span><h2>${section==="aid"?"Nouvelle demande d’entraide":"Nouvelle annonce"}</h2></div></div><form id="memberProposal" class="content-form"><label>Titre<input name="title" maxlength="100" required></label><label>Catégorie<select name="category">${(section==="aid"?["Demande","Proposition"]:["Vente","Don","Recherche","Prêt"]).map(v=>`<option>${v}</option>`).join("")}</select></label><label>Description<textarea name="description" rows="5" maxlength="1000" required></textarea></label><label>Votre nom<input name="authorName" maxlength="80" required></label><div class="form-actions"><button type="button" class="secondary-action" data-member-section="${section}">Annuler</button><button class="primary">Envoyer pour validation</button></div></form></section>`;$("memberProposal").onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.currentTarget);try{await addDoc(collection(db,config[section].collection),{title:f.get("title").trim(),category:f.get("category"),description:f.get("description").trim(),authorName:f.get("authorName").trim(),authorUid:currentUser.uid,status:"pending",createdAt:serverTimestamp()});$("privateResults").innerHTML="<div class='notice success'>Votre proposition a été transmise à l’administration.</div>";}catch{$("privateResults").innerHTML="<div class='notice'>L’envoi a échoué.</div>";}};}
 
-onAuthStateChanged(auth, async user => {
-  currentUser = user; currentRole = null;
-  if (!user) { authButton.textContent = "Se connecter"; document.getElementById("statusText").textContent = "Association du Grand Pavois"; return; }
-  authButton.textContent = "Mon espace"; document.getElementById("statusText").textContent = user.email;
-  try {
-    const snap = await getDoc(doc(db, "users", user.uid)); const profile = snap.exists() ? snap.data() : {};
-    currentRole = profile.role || "member";
-    document.getElementById("memberTitle").textContent = `Bienvenue${profile.firstName ? ` ${profile.firstName}` : ""}`;
-  } catch { currentRole = "member"; }
-  if (currentRole === "admin") { route("admin"); await loadAdminActivities(); }
-  else { route("member"); await loadMemberDashboard(); }
-});
-
-async function getActivities(includeHidden = false) {
-  const snap = await getDocs(query(collection(db, "publicActivities"), orderBy("eventDate", "asc")));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(item => includeHidden || item.published !== false);
-}
-function isUpcoming(item) {
-  const date = asDate(item.eventDate); if (Number.isNaN(date.getTime())) return true;
-  const end = new Date(date); end.setHours(23, 59, 59, 999); return end >= new Date();
-}
-function activityCard(item, compact = false) {
-  const dateText = formatDate(item.eventDate);
-  return `<article class="member-activity-card${compact ? " compact" : ""}">
-    <div class="activity-date"><span>${escapeHtml(formatDate(item.eventDate, { month: "short" }).toUpperCase())}</span><b>${escapeHtml(formatDate(item.eventDate, { day: "2-digit" }))}</b></div>
-    <div class="activity-body"><span class="pill">${escapeHtml(item.category || "Activité AGP")}</span><h3>${escapeHtml(item.title || "Activité")}</h3>
-    <p class="activity-meta">${escapeHtml([dateText, item.time, item.location].filter(Boolean).join(" · "))}</p>${compact ? "" : `<p>${escapeHtml(item.description || "")}</p>`}</div>
-  </article>`;
-}
-async function loadMemberDashboard() {
-  const container = document.getElementById("memberUpcomingActivities"); container.innerHTML = "<div class='notice'>Chargement…</div>";
-  document.getElementById("privateResults").innerHTML = "";
-  try {
-    const activities = (await getActivities()).filter(isUpcoming).slice(0, 3);
-    container.innerHTML = activities.length ? activities.map(item => activityCard(item, true)).join("") : "<div class='notice'>Aucune activité programmée pour le moment.</div>";
-  } catch { container.innerHTML = "<div class='notice'>Impossible de charger les activités.</div>"; }
-}
-async function loadMemberSection(name) {
-  const out = document.getElementById("privateResults"); out.innerHTML = "<div class='notice'>Chargement…</div>";
-  if (name === "activities") {
-    try {
-      const items = (await getActivities()).filter(isUpcoming);
-      out.innerHTML = `<div class="section-title"><div><span>PROGRAMME</span><h2>${labels.activities}</h2></div></div>` + (items.length ? items.map(item => activityCard(item)).join("") : "<div class='notice'>Aucune activité programmée.</div>");
-    } catch { out.innerHTML = "<div class='notice'>Impossible de charger les activités.</div>"; }
-    return;
-  }
-  try {
-    const snap = await getDocs(collection(db, name));
-    out.innerHTML = `<div class="section-title"><div><span>ESPACE PRIVÉ</span><h2>${labels[name]}</h2></div></div>` + (snap.empty ? `<div class='notice'>Aucun contenu publié pour le moment.</div>` : snap.docs.map(d => { const x = d.data(); return `<article class="result"><h3>${escapeHtml(x.title || x.name || "Publication")}</h3><p>${escapeHtml(x.description || x.text || x.phone || "")}</p></article>`; }).join(""));
-  } catch { out.innerHTML = "<div class='notice'>Impossible de charger cette rubrique.</div>"; }
-}
-
-function openEditor(id = null, data = {}) {
-  editingId = id; document.getElementById("editorTitle").textContent = id ? "Modifier l'activité" : "Nouvelle activité";
-  document.getElementById("contentTitle").value = data.title || "";
-  document.getElementById("contentCategory").value = data.category || "Activité AGP";
-  document.getElementById("contentDescription").value = data.description || "";
-  document.getElementById("contentDate").value = toDateInput(data.eventDate);
-  document.getElementById("contentTime").value = data.time || "";
-  document.getElementById("contentLocation").value = data.location || "";
-  document.getElementById("contentPublished").checked = data.published !== false;
-  document.getElementById("contentEditorPanel").hidden = false; document.getElementById("contentTitle").focus();
-}
-function closeEditor() { editingId = null; document.getElementById("contentEditor").reset(); document.getElementById("contentCategory").value = "Activité AGP"; document.getElementById("contentPublished").checked = true; document.getElementById("contentEditorPanel").hidden = true; }
-async function saveActivity(event) {
-  event.preventDefault(); if (currentRole !== "admin") return;
-  const button = document.getElementById("saveContent"); button.disabled = true; button.textContent = "Enregistrement…";
-  const dateValue = document.getElementById("contentDate").value;
-  const payload = { title: document.getElementById("contentTitle").value.trim(), category: document.getElementById("contentCategory").value.trim(), description: document.getElementById("contentDescription").value.trim(), eventDate: Timestamp.fromDate(new Date(`${dateValue}T12:00:00`)), time: document.getElementById("contentTime").value.trim(), location: document.getElementById("contentLocation").value.trim(), published: document.getElementById("contentPublished").checked, updatedAt: serverTimestamp() };
-  try {
-    if (editingId) await updateDoc(doc(db, "publicActivities", editingId), payload); else { payload.createdAt = serverTimestamp(); await addDoc(collection(db, "publicActivities"), payload); }
-    closeEditor(); showAdminMessage("L'activité a bien été enregistrée."); await loadAdminActivities();
-  } catch (error) { console.error(error); showAdminMessage("L'enregistrement a échoué. Vérifiez les règles Firestore.", "error"); }
-  finally { button.disabled = false; button.textContent = "Enregistrer"; }
-}
-async function removeActivity(id) {
-  if (!window.confirm("Supprimer définitivement cette activité ?")) return;
-  try { await deleteDoc(doc(db, "publicActivities", id)); showAdminMessage("L'activité a été supprimée."); await loadAdminActivities(); }
-  catch { showAdminMessage("La suppression a échoué.", "error"); }
-}
-async function loadAdminActivities() {
-  const out = document.getElementById("adminActivitiesList"); out.innerHTML = "<div class='admin-empty'>Chargement…</div>";
-  try {
-    const items = await getActivities(true);
-    out.innerHTML = items.length ? items.map(item => `<article class="admin-item"><div><div class="admin-item-top"><span class="status ${item.published === false ? "draft" : "published"}">${item.published === false ? "Masquée" : "Visible"}</span></div><h3>${escapeHtml(item.title || "Sans titre")}</h3><p>${escapeHtml([formatDate(item.eventDate), item.time, item.location].filter(Boolean).join(" · "))}</p></div><div class="admin-actions"><button type="button" data-edit="${item.id}">Modifier</button><button type="button" class="danger" data-delete="${item.id}">Supprimer</button></div></article>`).join("") : "<div class='admin-empty'>Aucune activité créée.</div>";
-  } catch { out.innerHTML = "<div class='admin-empty error-text'>Impossible de charger les activités.</div>"; }
-}
-
-if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(error => console.warn("Service worker non enregistré", error)));
+async function selectAdmin(section){adminSection=section;editingId=null;closeEditor();$("adminSectionTitle").textContent=config[section].title;$("newItem").hidden=["classifieds","aid","users"].includes(section);document.querySelectorAll("[data-admin-section]").forEach(b=>b.classList.toggle("active-feature",b.dataset.adminSection===section));await loadAdminList();}
+async function loadAdminList(){const out=$("adminList");out.innerHTML="<div class='admin-empty'>Chargement…</div>";try{const items=await getItems(adminSection,true);if(!items.length)return out.innerHTML="<div class='admin-empty'>Aucun élément.</div>";out.innerHTML=items.map(x=>adminRow(x)).join("");}catch(e){console.error(e);out.innerHTML="<div class='admin-empty error-text'>Impossible de charger cette rubrique.</div>";}}
+function adminRow(x){if(adminSection==="users")return `<article class="admin-item"><div><span class="status ${x.role}">${escapeHtml(x.role||"pending")}</span><h3>${escapeHtml([x.firstName,x.lastName].filter(Boolean).join(" ")||x.email||"Compte")}</h3><p>${escapeHtml(x.email||"")}</p></div><div class="admin-actions"><button data-user-role="member" data-id="${x.id}">Activer</button><button data-user-role="admin" data-id="${x.id}">Administrateur</button><button class="danger" data-user-role="disabled" data-id="${x.id}">Suspendre</button></div></article>`;const status=adminSection==="activities"?(x.published===false?"Masqué":"Visible"):(x.status||"pending");return `<article class="admin-item"><div><span class="status ${escapeHtml(status)}">${escapeHtml(status)}</span><h3>${escapeHtml(x.title||x.name||"Sans titre")}</h3><p>${escapeHtml(adminSection==="activities"?[formatDate(x.eventDate),x.time,x.location].filter(Boolean).join(" · "):(x.description||x.phone||""))}</p></div><div class="admin-actions">${["classifieds","aid"].includes(adminSection)&&x.status!=="published"?`<button data-publish="${x.id}">Publier</button>`:""}<button data-edit="${x.id}">Modifier</button><button class="danger" data-delete="${x.id}">Supprimer</button></div></article>`;}
+async function handleAdminAction(e){const id=e.target.dataset.id||e.target.dataset.edit||e.target.dataset.delete||e.target.dataset.publish;if(!id)return;try{if(e.target.dataset.userRole){await updateDoc(doc(db,"users",id),{role:e.target.dataset.userRole,updatedAt:serverTimestamp()});message("Accès mis à jour.");}else if(e.target.dataset.publish){await updateDoc(doc(db,config[adminSection].collection,id),{status:"published",reviewedAt:serverTimestamp()});message("Publication validée.");}else if(e.target.dataset.delete){if(!confirm("Supprimer définitivement cet élément ?"))return;await deleteDoc(doc(db,config[adminSection].collection,id));message("Élément supprimé.");}else if(e.target.dataset.edit){const snap=await getDoc(doc(db,config[adminSection].collection,id));openEditor(id,snap.data());}await loadAdminList();}catch(e){console.error(e);message("L’opération a échoué.","error");}}
+function fields(section,d={}){if(section==="activities")return `<label>Titre<input name="title" maxlength="100" required value="${escapeHtml(d.title)}"></label><label>Catégorie<input name="category" maxlength="60" value="${escapeHtml(d.category||"Activité AGP")}"></label><label>Description<textarea name="description" rows="5" required>${escapeHtml(d.description)}</textarea></label><div class="activity-fields"><label>Date<input name="date" type="date" required value="${inputDate(d.eventDate)}"></label><label>Horaire<input name="time" value="${escapeHtml(d.time)}"></label><label class="wide">Lieu<input name="location" value="${escapeHtml(d.location)}"></label></div><label class="check-label"><input name="published" type="checkbox" ${d.published===false?"":"checked"}> Visible par les adhérents</label>`;if(section==="artisans")return `<label>Nom de l’artisan<input name="name" required value="${escapeHtml(d.name)}"></label><label>Métier / catégorie<input name="category" required value="${escapeHtml(d.category)}"></label><label>Téléphone<input name="phone" value="${escapeHtml(d.phone)}"></label><label>Description / avis AGP<textarea name="description" rows="5" required>${escapeHtml(d.description)}</textarea></label>`;return `<label>Titre<input name="title" required value="${escapeHtml(d.title)}"></label><label>Catégorie<input name="category" value="${escapeHtml(d.category)}"></label><label>Description<textarea name="description" rows="5" required>${escapeHtml(d.description)}</textarea></label><label>Statut<select name="status"><option value="pending" ${d.status==="pending"?"selected":""}>En attente</option><option value="published" ${d.status==="published"?"selected":""}>Publié</option><option value="refused" ${d.status==="refused"?"selected":""}>Refusé</option></select></label>`;}
+function openEditor(id=null,d={}){editingId=id;$("editorTitle").textContent=`${id?"Modifier":"Ajouter"} ${config[adminSection].singular}`;$("editorFields").innerHTML=fields(adminSection,d);$("editorPanel").hidden=false;$("editorPanel").scrollIntoView({behavior:"smooth"});}
+function closeEditor(){editingId=null;$("editorPanel").hidden=true;$("editorFields").innerHTML="";}
+async function saveAdminItem(e){e.preventDefault();const f=new FormData(e.currentTarget);let payload={updatedAt:serverTimestamp()};if(adminSection==="activities")payload={...payload,title:f.get("title").trim(),category:f.get("category").trim(),description:f.get("description").trim(),eventDate:Timestamp.fromDate(new Date(`${f.get("date")}T12:00:00`)),time:f.get("time").trim(),location:f.get("location").trim(),published:f.get("published")==="on"};else if(adminSection==="artisans")payload={...payload,name:f.get("name").trim(),category:f.get("category").trim(),phone:f.get("phone").trim(),description:f.get("description").trim(),status:"published"};else payload={...payload,title:f.get("title").trim(),category:f.get("category").trim(),description:f.get("description").trim(),status:f.get("status")};try{if(editingId)await updateDoc(doc(db,config[adminSection].collection,editingId),payload);else{payload.createdAt=serverTimestamp();await addDoc(collection(db,config[adminSection].collection),payload);}closeEditor();message("Enregistrement effectué.");await loadAdminList();}catch(e){console.error(e);message("L’enregistrement a échoué.","error");}}
+if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.warn));
