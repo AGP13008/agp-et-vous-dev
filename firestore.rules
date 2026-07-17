@@ -30,6 +30,13 @@ service cloud.firestore {
       allow read: if isMember();
       allow write: if isAdmin();
     }
+    match /activityRegistrations/{id} {
+      allow read: if isAdmin() || (isMember() && resource.data.userUid == request.auth.uid);
+      allow create: if isMember()
+        && request.resource.data.userUid == request.auth.uid;
+      allow delete: if isAdmin() || (isMember() && resource.data.userUid == request.auth.uid);
+      allow update: if false;
+    }
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow create: if signedIn()
