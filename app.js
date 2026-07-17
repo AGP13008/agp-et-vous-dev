@@ -17,6 +17,9 @@ const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"
 const asDate = value => value?.toDate ? value.toDate() : new Date(value);
 const formatDate = value => value && !Number.isNaN(asDate(value).getTime()) ? new Intl.DateTimeFormat("fr-FR", { weekday:"long", day:"numeric", month:"long" }).format(asDate(value)) : "";
 const inputDate = value => { if (!value) return ""; const d = asDate(value); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
+document.querySelector(".public-hero .hero-copy p").textContent="L’espace réservé aux adhérents pour se rencontrer, s’entraider et partager. Retrouvez les prochaines activités de l’AGP, les annonces entre voisins et les contacts recommandés.";
+document.querySelector(".public-intro h2").textContent="L’AGP, au service des résidents";
+document.querySelector(".public-intro p").textContent="L’association favorise les rencontres, la convivialité et l’entraide au sein du Grand Pavois.";
 
 function route(name) { views.forEach(v => v.classList.toggle("active", v.dataset.view === name)); document.querySelectorAll(".bottom [data-route]").forEach(b => b.classList.toggle("active", b.dataset.route === name)); scrollTo({top:0,behavior:"smooth"}); }
 function openLogin(){ $("loginModal").classList.add("open"); } function closeLogin(){ $("loginModal").classList.remove("open"); }
