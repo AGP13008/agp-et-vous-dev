@@ -34,8 +34,7 @@ service cloud.firestore {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow create: if signedIn()
         && request.auth.uid == uid
-        && request.resource.data.role == 'pending'
-        && request.resource.data.email == request.auth.token.email;
+        && request.resource.data.role == 'pending';
       allow update, delete: if isAdmin();
     }
     match /publicNews/{id} { allow read, write: if false; }
