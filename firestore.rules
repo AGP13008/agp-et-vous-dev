@@ -32,9 +32,7 @@ service cloud.firestore {
     }
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
-      allow create, delete: if isAdmin() && uid != request.auth.uid;
-      allow update: if isAdmin()
-        && (uid != request.auth.uid || request.resource.data.role == 'admin');
+      allow write: if isAdmin();
     }
     match /publicNews/{id} { allow read, write: if false; }
     match /privateInfo/{id} { allow read, write: if false; }
