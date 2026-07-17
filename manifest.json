@@ -1,11 +1,15 @@
 {
   "name": "AGP & Vous",
   "short_name": "AGP",
+  "id": "./",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f5f7fb",
   "theme_color": "#071f4b",
   "lang": "fr",
+  "categories": ["social", "lifestyle"],
+  "description": "L’espace privé des adhérents de l’Association du Grand Pavois.",
   "icons": [
     {
       "src": "assets/icon-192.png",
