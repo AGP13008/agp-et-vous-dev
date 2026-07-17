@@ -20,7 +20,7 @@ const inputDate = value => { if (!value) return ""; const d = asDate(value); ret
 
 function route(name) { views.forEach(v => v.classList.toggle("active", v.dataset.view === name)); document.querySelectorAll(".bottom [data-route]").forEach(b => b.classList.toggle("active", b.dataset.route === name)); scrollTo({top:0,behavior:"smooth"}); }
 function openLogin(){ $("loginModal").classList.add("open"); } function closeLogin(){ $("loginModal").classList.remove("open"); }
-function openSignup(){ $("signupMessage").textContent="";$("signupModal").classList.add("open"); } function closeSignup(){ $("signupModal").classList.remove("open"); }
+function openSignup(){ if(currentUser)return;$("signupMessage").textContent="";$("signupModal").classList.add("open"); } function closeSignup(){ $("signupModal").classList.remove("open"); }
 function message(text, kind="success"){ const box=$("adminMessage"); box.textContent=text; box.className=`admin-message ${kind}`; box.hidden=false; setTimeout(()=>box.hidden=true,4500); }
 document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>route(b.dataset.route)); document.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeLogin);
 $("homeLogin").onclick=openLogin; $("authButton").onclick=()=>currentUser?route(currentRole==="admin"?"admin":"member"):openLogin;$("requestAccess").onclick=openSignup;document.querySelectorAll("[data-signup-close]").forEach(b=>b.onclick=closeSignup);
@@ -37,6 +37,7 @@ $("adminList").onclick=handleAdminAction; $("privateResults").onclick=handleMemb
 onAuthStateChanged(auth, async user=>{
   if(registrationInProgress)return;
   currentUser=user; currentRole=null;
+  $("requestAccess").hidden=!!user;
   if(!user){$("authButton").textContent="Se connecter";$("statusText").textContent="Association du Grand Pavois";return;}
   $("authButton").textContent="Mon espace";$("statusText").textContent=user.email;
   try{const snap=await getDoc(doc(db,"users",user.uid));if(!snap.exists()||!["member","admin"].includes(snap.data().role))throw new Error("denied");const profile=snap.data();currentRole=profile.role;$("memberTitle").textContent=`Bienvenue${profile.firstName?` ${profile.firstName}`:""}`;if(currentRole==="admin"){route("admin");selectAdmin("activities");}else{route("member");loadDashboard();}}
