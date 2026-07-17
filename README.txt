@@ -1,39 +1,22 @@
-AGP & Vous — Administration V2
+AGP & Vous — Mise à jour V2.0
 
-Cette version conserve la base Firebase existante et ajoute :
-- création, modification et suppression des actualités ;
-- création, modification et suppression des activités ;
-- publication ou masquage d'un contenu ;
-- affichage automatique des actualités sur l'accueil ;
-- affichage automatique des activités dans l'agenda ;
-- accès de l'administratrice à l'espace adhérents ;
-- activation du service worker ;
-- règles renforcées : seuls les profils users avec role member ou admin accèdent au privé.
-
-MISE EN LIGNE
-1. Copier les fichiers dans le dépôt agp-et-vous-dev en remplaçant les anciens.
-2. Publier les nouvelles règles : Firebase > Firestore Database > Rules.
-3. Coller le contenu de firestore.rules puis cliquer sur Publier.
-4. Envoyer les fichiers vers GitHub.
-5. Recharger le site. En cas d'ancienne version en cache, fermer puis rouvrir l'onglet.
-
-PROFIL ADMINISTRATEUR REQUIS
-Collection : users
-Document ID : UID Firebase du compte administrateur
-Champs :
-- firstName (string) = Stéphanie
-- role (string) = admin
-- email (string) = adresse de connexion
+Cette version remet l'application dans l'architecture validée :
+- partie publique minimale ;
+- aucune actualité publique ;
+- aucune activité visible sans connexion ;
+- suppression de la rubrique « Informations Grand Pavois » ;
+- tableau de bord adhérent centré sur les prochaines activités ;
+- rubriques privées : Activités, Entre voisins, Entraide et Artisans ;
+- tableau de bord administrateur simplifié en cinq rubriques ;
+- gestion des activités conservée et réservée à l'administratrice.
 
 IMPORTANT
-Tout autre adhérent devra aussi avoir un document dans users avec role = member.
-Un simple compte Authentication sans fiche users n'accède plus aux informations privées.
+Après le remplacement des fichiers, les règles Firestore doivent aussi être publiées dans Firebase afin que les activités ne soient plus publiques.
 
-Collections utilisées :
-- publicNews
-- publicActivities
-- classifieds
-- aid
-- artisans
-- privateInfo
-- users
+Fichiers de cette mise à jour :
+- index.html
+- styles.css
+- app.js
+- firestore.rules
+- service-worker.js
+- README.txt

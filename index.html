@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#071f4b"><meta name="description" content="AGP & Vous">
+<meta name="theme-color" content="#071f4b"><meta name="description" content="AGP & Vous, l'espace des adhérents de l'Association du Grand Pavois">
 <link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="stylesheet" href="styles.css"><title>AGP & Vous</title>
 </head>
@@ -14,87 +14,76 @@
 
 <main>
 <section class="view active" data-view="home">
-  <div class="hero"><img src="assets/tour.jpg" alt="Le Grand Pavois"><div class="shade"></div>
-    <div class="hero-copy"><span>ASSOCIATION DU GRAND PAVOIS</span><h1>Bienvenue au<br>Grand Pavois</h1>
-    <p>Activités, informations et services utiles, réunis au même endroit.</p>
-    <div><button class="primary" data-route="activities">Voir les activités</button><button class="glass protected">Espace adhérents</button></div></div>
+  <div class="hero public-hero"><img src="assets/tour.jpg" alt="Le Grand Pavois"><div class="shade"></div>
+    <div class="hero-copy"><span>ASSOCIATION DU GRAND PAVOIS</span><h1>AGP & Vous</h1>
+    <p>L'espace simple et pratique des adhérents de l'Association du Grand Pavois.</p>
+    <div class="hero-actions"><button class="primary" data-route="join">Découvrir l'association</button><button class="glass" id="homeLogin">Se connecter</button></div></div>
   </div>
-  <div class="content">
-    <section class="block"><span class="eyebrow">À LA UNE</span><h2>Dernières informations</h2>
-      <div id="publicNewsList" class="public-list"><div class="empty-public">Chargement des actualités…</div></div>
+  <div class="content public-content">
+    <section class="public-intro"><span class="eyebrow">L'ASSOCIATION</span><h2>Créer du lien entre les résidents</h2><p>L'AGP propose des rencontres, des activités, de l'entraide et des services utiles aux copropriétaires résidents du Grand Pavois.</p></section>
+    <section class="public-actions">
+      <button data-route="join"><i>🤝</i><b>Adhérer à l'AGP</b><small>Découvrir l'association et ses actions</small></button>
+      <button data-route="contact"><i>✉️</i><b>Nous contacter</b><small>Une question ou une demande d'information</small></button>
     </section>
-    <section class="private">
-      <div class="private-title"><div><span>ESPACE ADHÉRENTS</span><h2>Services privés</h2></div><b>🔒</b></div>
-      <div class="grid">
-        <button class="protected" data-private="classifieds"><i>🛍️</i><b>Entre voisins</b><small>Vendre, donner, rechercher</small></button>
-        <button class="protected" data-private="aid"><i>🤝</i><b>Entraide</b><small>Demandes et propositions</small></button>
-        <button class="protected" data-private="artisans"><i>🛠️</i><b>Artisans</b><small>Contacts recommandés</small></button>
-        <button class="protected" data-private="privateInfo"><i>📢</i><b>Infos Grand Pavois</b><small>Informations réservées</small></button>
-      </div>
-    </section>
-    <section class="join"><img src="assets/drone.jpg" alt=""><div class="shade"></div><div><span>REJOINDRE L'AGP</span><h2>Une association pour mieux vivre ensemble</h2><p>Rencontres, sorties, entraide et informations utiles.</p><button class="primary" data-route="join">Découvrir</button></div></section>
   </div>
 </section>
 
-<section class="view" data-view="activities"><div class="cover"><img src="assets/prado.jpg" alt=""><div class="shade"></div><div><span>AGENDA</span><h1>Activités</h1></div></div>
-<div class="content block"><div id="publicActivitiesList" class="public-list"><div class="empty-public">Chargement des activités…</div></div></div></section>
-
-<section class="view" data-view="join"><div class="cover"><img src="assets/tour.jpg" alt=""><div class="shade"></div><div><span>L'ASSOCIATION</span><h1>Adhérer</h1></div></div>
-<div class="content block"><h2>Pourquoi adhérer ?</h2><p>L'AGP crée du lien entre les copropriétaires résidents et propose des activités, de l'entraide et des services utiles.</p><button class="primary full" disabled>HelloAsso sera ajouté plus tard</button></div></section>
+<section class="view" data-view="join"><div class="cover"><img src="assets/drone.jpg" alt="Le Grand Pavois"><div class="shade"></div><div><span>L'ASSOCIATION</span><h1>Adhérer</h1></div></div>
+<div class="content block"><h2>Une association pour mieux vivre ensemble</h2><p>L'AGP organise des activités conviviales, facilite l'entraide entre voisins et partage des contacts utiles réservés à ses adhérents.</p><p>Pour rejoindre l'association ou obtenir des renseignements, contactez-nous directement.</p><button class="primary full" data-route="contact">Contacter l'AGP</button></div></section>
 
 <section class="view" data-view="contact"><div class="contact"><img src="assets/logo.jpg" alt="Logo AGP"><h1>Contacter l'AGP</h1><a href="mailto:agp13008@gmail.com">✉️ agp13008@gmail.com</a><a href="tel:0755668341">📞 07 55 66 83 41</a></div></section>
 
-<section class="view" data-view="member"><div class="shell"><div class="head"><div><span>ESPACE ADHÉRENTS</span><h1 id="memberTitle">Bienvenue</h1></div><button id="logoutMember">Déconnexion</button></div>
-<div id="privateMessage" class="notice">Chargement des informations privées…</div>
-<div class="grid member-grid">
-<button data-load="classifieds"><i>🛍️</i><b>Entre voisins</b><small>Objets à vendre, à donner ou recherchés</small></button>
-<button data-load="aid"><i>🤝</i><b>Entraide</b><small>Demandes et propositions</small></button>
-<button data-load="artisans"><i>🛠️</i><b>Artisans</b><small>Contacts recommandés</small></button>
-<button data-load="privateInfo"><i>📢</i><b>Infos Grand Pavois</b><small>Informations réservées</small></button>
-</div>
-<div id="privateResults" class="results"></div></div></section>
+<section class="view" data-view="member"><div class="shell">
+  <div class="head"><div><span>ESPACE ADHÉRENTS</span><h1 id="memberTitle">Bienvenue</h1></div><button id="logoutMember">Déconnexion</button></div>
+  <section class="member-dashboard">
+    <div class="section-title"><div><span>À VENIR</span><h2>Prochaines activités</h2></div><button class="text-action" data-member-section="activities">Tout voir</button></div>
+    <div id="memberUpcomingActivities" class="activity-cards"><div class="notice">Chargement des prochaines activités…</div></div>
+  </section>
+  <section class="member-summary">
+    <button data-member-section="aid"><span>🤝</span><div><b>Entraide</b><small>Demandes et propositions entre adhérents</small></div></button>
+    <button data-member-section="classifieds"><span>📢</span><div><b>Entre voisins</b><small>Vendre, donner, rechercher ou prêter</small></div></button>
+    <button data-member-section="artisans"><span>🛠️</span><div><b>Artisans</b><small>Contacts recommandés par l'AGP</small></div></button>
+  </section>
+  <div id="privateResults" class="results"></div>
+</div></section>
 
 <section class="view" data-view="admin"><div class="shell">
-<div class="head"><div><span>ADMINISTRATION</span><h1>Tableau de bord</h1></div><button id="logoutAdmin">Déconnexion</button></div>
-<div id="adminMessage" class="admin-message" hidden></div>
-<div class="admin-shortcuts">
-  <button id="newNews" class="admin-primary">＋ Nouvelle actualité</button>
-  <button id="newActivity" class="admin-primary">＋ Nouvelle activité</button>
-  <button id="openMemberSpace">Voir l'espace adhérents</button>
-</div>
+  <div class="head"><div><span>ADMINISTRATION</span><h1>Tableau de bord</h1></div><button id="logoutAdmin">Déconnexion</button></div>
+  <div id="adminMessage" class="admin-message" hidden></div>
+  <div class="admin-main-grid">
+    <button id="manageActivities" class="admin-feature active-feature"><i>📅</i><b>Activités</b><small>Créer et gérer les prochaines activités</small></button>
+    <button data-future="Entre voisins"><i>📢</i><b>Entre voisins</b><small>Validation des petites annonces</small></button>
+    <button data-future="Entraide"><i>🤝</i><b>Entraide</b><small>Validation des demandes</small></button>
+    <button data-future="Artisans"><i>🛠️</i><b>Artisans</b><small>Gestion des contacts recommandés</small></button>
+    <button data-future="Adhérents"><i>👥</i><b>Adhérents</b><small>Gestion des comptes et des accès</small></button>
+  </div>
+  <div class="admin-shortcuts"><button id="newActivity" class="admin-primary">＋ Nouvelle activité</button><button id="openMemberSpace">Voir l'espace adhérents</button></div>
 
-<section id="contentEditorPanel" class="admin-panel editor-panel" hidden>
-  <div class="panel-heading"><div><span>PUBLICATION</span><h2 id="editorTitle">Nouveau contenu</h2></div><button type="button" id="closeEditorTop" class="close-panel">×</button></div>
-  <form id="contentEditor" class="content-form">
-    <input type="hidden" id="editorType">
-    <label>Titre<input id="contentTitle" type="text" maxlength="100" required></label>
-    <label>Catégorie<input id="contentCategory" type="text" maxlength="60" required></label>
-    <label>Description<textarea id="contentDescription" rows="5" maxlength="1000" required></textarea></label>
-    <div id="activityFields" class="activity-fields" hidden>
-      <label>Date<input id="contentDate" type="date"></label>
-      <label>Horaire<input id="contentTime" type="text" maxlength="40" placeholder="Ex. 15 h à 17 h"></label>
-      <label class="wide">Lieu<input id="contentLocation" type="text" maxlength="120" placeholder="Ex. L'Appart, 331 avenue du Prado"></label>
-    </div>
-    <label class="check-label"><input id="contentPublished" type="checkbox" checked> Publier immédiatement</label>
-    <div class="form-actions"><button type="button" id="cancelEditor" class="secondary-action">Annuler</button><button id="saveContent" class="primary" type="submit">Enregistrer</button></div>
-  </form>
-</section>
+  <section id="contentEditorPanel" class="admin-panel editor-panel" hidden>
+    <div class="panel-heading"><div><span>ACTIVITÉ</span><h2 id="editorTitle">Nouvelle activité</h2></div><button type="button" id="closeEditorTop" class="close-panel">×</button></div>
+    <form id="contentEditor" class="content-form">
+      <label>Titre<input id="contentTitle" type="text" maxlength="100" required></label>
+      <label>Catégorie<input id="contentCategory" type="text" maxlength="60" value="Activité AGP" required></label>
+      <label>Description<textarea id="contentDescription" rows="5" maxlength="1000" required></textarea></label>
+      <div class="activity-fields">
+        <label>Date<input id="contentDate" type="date" required></label>
+        <label>Horaire<input id="contentTime" type="text" maxlength="40" placeholder="Ex. 15 h à 17 h"></label>
+        <label class="wide">Lieu<input id="contentLocation" type="text" maxlength="120" placeholder="Ex. L'Appart, 331 avenue du Prado"></label>
+      </div>
+      <label class="check-label"><input id="contentPublished" type="checkbox" checked> Visible par les adhérents</label>
+      <div class="form-actions"><button type="button" id="cancelEditor" class="secondary-action">Annuler</button><button id="saveContent" class="primary" type="submit">Enregistrer</button></div>
+    </form>
+  </section>
 
-<div id="adminContentLists" class="admin-content-grid">
-  <section class="admin-panel"><div class="panel-heading"><div><span>ACCUEIL</span><h2>Actualités</h2></div></div><div id="adminNewsList" class="admin-list"></div></section>
-  <section class="admin-panel"><div class="panel-heading"><div><span>AGENDA</span><h2>Activités</h2></div></div><div id="adminActivitiesList" class="admin-list"></div></section>
-</div>
-
-<section class="admin-panel next-features"><h2>Fonctions suivantes</h2><p>Artisans, validation des annonces, entraide et gestion des adhérents seront ajoutés sans modifier cette base.</p></section>
-<button id="openAdminSpace" hidden></button>
+  <section class="admin-panel"><div class="panel-heading"><div><span>PROGRAMME</span><h2>Activités enregistrées</h2></div></div><div id="adminActivitiesList" class="admin-list"></div></section>
 </div></section>
 </main>
 
 <nav class="bottom">
 <button class="active" data-route="home"><span>⌂</span><small>Accueil</small></button>
-<button data-route="activities"><span>▣</span><small>Activités</small></button>
-<button class="protected" data-private="classifieds"><span>🛍</span><small>Annonces</small></button>
-<button class="protected" data-private="aid"><span>🤝</span><small>Entraide</small></button>
+<button data-route="join"><span>♡</span><small>Association</small></button>
+<button class="member-nav" data-member-section="activities"><span>▣</span><small>Activités</small></button>
+<button class="member-nav" data-member-section="classifieds"><span>📢</span><small>Entre voisins</small></button>
 <button data-route="contact"><span>●</span><small>Contact</small></button>
 </nav>
 

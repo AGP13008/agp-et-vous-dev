@@ -2,48 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn(){ return request.auth != null; }
-    function userProfile(){
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-    function hasProfile(){
-      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-    function isAdmin(){
-      return hasProfile() && userProfile().role == "admin";
-    }
-    function isMember(){
-      return hasProfile() && (userProfile().role == "member" || userProfile().role == "admin");
-    }
+    function hasProfile(){ return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function isMember(){ return hasProfile() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ["member", "admin"]; }
+    function isAdmin(){ return hasProfile() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"; }
 
-    match /publicNews/{id} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-    match /publicActivities/{id} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-    match /classifieds/{id} {
-      allow read: if isMember();
-      allow create: if isMember() && request.resource.data.authorUid == request.auth.uid;
-      allow update, delete: if isAdmin() || (isMember() && request.auth.uid == resource.data.authorUid);
-    }
-    match /aid/{id} {
-      allow read: if isMember();
-      allow create: if isMember() && request.resource.data.authorUid == request.auth.uid;
-      allow update, delete: if isAdmin() || (isMember() && request.auth.uid == resource.data.authorUid);
-    }
-    match /artisans/{id} {
-      allow read: if isMember();
-      allow create, update, delete: if isAdmin();
-    }
-    match /privateInfo/{id} {
-      allow read: if isMember();
-      allow create, update, delete: if isAdmin();
-    }
-    match /users/{uid} {
-      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
-      allow create, update, delete: if isAdmin();
-    }
+    match /publicActivities/{id} { allow read: if isMember(); allow write: if isAdmin(); }
+    match /publicNews/{id} { allow read, write: if isAdmin(); }
+    match /classifieds/{id} { allow read: if isMember(); allow create: if isMember(); allow update, delete: if isAdmin() || (isMember() && request.auth.uid == resource.data.authorUid); }
+    match /aid/{id} { allow read: if isMember(); allow create: if isMember(); allow update, delete: if isAdmin() || (isMember() && request.auth.uid == resource.data.authorUid); }
+    match /artisans/{id} { allow read: if isMember(); allow write: if isAdmin(); }
+    match /privateInfo/{id} { allow read, write: if false; }
+    match /users/{uid} { allow read: if signedIn() && (request.auth.uid == uid || isAdmin()); allow write: if isAdmin(); }
   }
 }
