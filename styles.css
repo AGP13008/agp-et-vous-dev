@@ -37,4 +37,5 @@
 .status.pending{background:#fff3cd;color:#765600}.status.published,.status.member{background:#dff5e8;color:#146c43}.status.refused,.status.disabled{background:#fde2e2;color:#9d2424}.status.admin{background:#e6e5ff;color:#4036a7}
 .notice.success{background:#e4f6ea;color:#17663b;border-color:#bfe7cd}
 .result small{display:block;margin-top:12px;color:#64748b}
+.admin-actions .confirm-delete{background:#a52a22;color:#fff}
 @media(max-width:620px){body{padding-bottom:132px}.shell{padding-bottom:132px}.section-title{align-items:flex-start;gap:12px}.member-add{font-size:.85rem;padding:10px}.admin-actions{flex-wrap:wrap}}
