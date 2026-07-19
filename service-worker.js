@@ -1,5 +1,5 @@
-const CACHE = 'agp-v3-29-0';
-const FILES = ['./','index.html','styles.css','app.js','firebase-config.js','manifest.json','assets/icon-tour-192.png','assets/icon-tour-512.png','assets/tour-identite.jpg','assets/tour-accueil.jpg','assets/drone.jpg','assets/prado.jpg','assets/livret-grand-pavois.pdf','assets/plan-palier-grand-pavois.jpg'];
+const CACHE = 'agp-v3-30-0';
+const FILES = ['./','index.html','styles.css','app.js','firebase-config.js','manifest.json','assets/icon-tour-192.png','assets/icon-tour-512.png','assets/tour-identite.jpg','assets/tour-accueil.jpg','assets/drone.jpg','assets/prado.jpg','assets/plan-palier-grand-pavois.jpg'];
 self.addEventListener('install', event => { self.skipWaiting(); event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES))); });
 self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', event => {
