@@ -73,7 +73,15 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.role == 'pending';
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'mobile', 'email', 'updatedAt'
+          ]));
+      allow delete: if isAdmin();
     }
     match /publicNews/{id} { allow read, write: if false; }
     match /privateInfo/{id} { allow read, write: if false; }
