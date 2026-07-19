@@ -1,4 +1,4 @@
-const CACHE = 'agp-v3-19-1';
+const CACHE = 'agp-v3-20-0';
 const FILES = ['./','index.html','styles.css','app.js','firebase-config.js','manifest.json','assets/icon-tour-192.png','assets/icon-tour-512.png','assets/tour-identite.jpg','assets/tour-accueil.jpg','assets/drone.jpg','assets/prado.jpg'];
 self.addEventListener('install', event => { self.skipWaiting(); event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES))); });
 self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())); });
