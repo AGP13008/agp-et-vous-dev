@@ -53,6 +53,14 @@ service cloud.firestore {
       allow read: if isMember();
       allow write: if isAdmin();
     }
+    match /magazinePages/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+    }
+    match /albumPhotos/{id} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+    }
     match /activityRegistrations/{id} {
       allow read: if isAdmin() || (isMember() && resource.data.userUid == request.auth.uid);
       allow create: if isMember()
