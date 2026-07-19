@@ -8,7 +8,7 @@ const $ = id => document.getElementById(id), views = [...document.querySelectorA
 let currentUser = null, currentRole = null, adminSection = "activities", editingId = null, registrationInProgress = false, currentMemberSection = null;
 const config = {
   activities: { collection: "publicActivities", title: "Activités", singular: "activité" },
-  classifieds: { collection: "classifieds", title: "Entre voisins", singular: "annonce" },
+  classifieds: { collection: "classifieds", title: "Petites annonces", singular: "annonce" },
   aid: { collection: "aid", title: "Entraide", singular: "demande" },
   artisans: { collection: "artisans", title: "Artisans", singular: "artisan" },
   magazines: { collection: "magazines", title: "AGP Mags", singular: "magazine" },
@@ -20,7 +20,7 @@ const safeUrl = value => { try { const url=new URL(String(value||"")); return ur
 const asDate = value => value?.toDate ? value.toDate() : new Date(value);
 const formatDate = value => value && !Number.isNaN(asDate(value).getTime()) ? new Intl.DateTimeFormat("fr-FR", { weekday:"long", day:"numeric", month:"long" }).format(asDate(value)) : "";
 const inputDate = value => { if (!value) return ""; const d = asDate(value); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); };
-document.querySelector(".public-hero .hero-copy p").textContent="L’espace réservé aux adhérents pour se rencontrer, s’entraider et partager. Retrouvez les prochaines activités de l’AGP, les annonces entre voisins et les contacts recommandés.";
+document.querySelector(".public-hero .hero-copy p").textContent="L’espace réservé aux adhérents pour se rencontrer, s’entraider et partager. Retrouvez les prochaines activités de l’AGP, les petites annonces et les contacts recommandés.";
 document.querySelector(".public-intro h2").textContent="L’AGP, au service des résidents";
 document.querySelector(".public-intro p").textContent="L’association favorise les rencontres, la convivialité et l’entraide au sein du Grand Pavois.";
 document.querySelector('[data-view="join"] .content.block').innerHTML=`<span class="eyebrow">ADHÉSION 2026</span><h2>Rejoignez l’Association du Grand Pavois</h2><p class="join-lead">Participez à la vie du Grand Pavois, rencontrez vos voisins et profitez des activités et services réservés aux adhérents.</p><div class="membership-prices"><div><span>INDIVIDUELLE</span><b>20 €</b><small>pour une personne</small></div><div><span>COUPLE</span><b>25 €</b><small>pour deux personnes</small></div></div><a class="helloasso-button" href="https://www.helloasso.com/associations/association-du-grand-pavois/adhesions/bulletin-d-adhesion-2026" target="_blank" rel="noopener noreferrer"><span>Adhérer en ligne avec HelloAsso</span><small>Paiement sécurisé sur le site HelloAsso ↗</small></a><div class="access-after-membership"><h3>Vous êtes déjà adhérent ?</h3><p>Demandez votre accès personnel à l’application AGP & Vous. Votre compte sera activé après vérification par l’association.</p><button class="primary full" id="requestAccess">Demander mon accès adhérent</button><button class="secondary-action full" data-route="contact">Contacter l’AGP</button></div>`;

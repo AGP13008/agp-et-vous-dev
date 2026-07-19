@@ -3,7 +3,7 @@ AGP & Vous — V3
 Fonctions disponibles :
 - partie publique minimale ;
 - espace privé avec les prochaines activités ;
-- propositions d’annonces Entre voisins et de demandes d’entraide ;
+- propositions de petites annonces et de demandes d’entraide ;
 - validation administrative avant publication ;
 - gestion des artisans recommandés ;
 - gestion des accès adhérent, administrateur et suspendu ;
