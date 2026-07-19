@@ -11,6 +11,14 @@ service cloud.firestore {
         && request.resource.data.authorUid == request.auth.uid
         && request.resource.data.status == 'pending';
     }
+    function ownsResource() {
+      return isMember() && resource.data.authorUid == request.auth.uid;
+    }
+    function safeOwnerResubmission() {
+      return ownsResource()
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.status == 'pending';
+    }
 
     match /publicActivities/{id} {
       allow read: if isMember();
@@ -19,12 +27,19 @@ service cloud.firestore {
     match /classifieds/{id} {
       allow read: if isMember() && (resource.data.status == 'published' || resource.data.authorUid == request.auth.uid || isAdmin());
       allow create: if ownPendingSubmission();
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || safeOwnerResubmission();
+      allow delete: if isAdmin() || ownsResource();
     }
     match /aid/{id} {
       allow read: if isMember() && (resource.data.status == 'published' || resource.data.authorUid == request.auth.uid || isAdmin());
       allow create: if ownPendingSubmission();
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin()
+        || safeOwnerResubmission()
+        || (ownsResource()
+          && resource.data.status == 'published'
+          && request.resource.data.status == 'published'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['progress', 'updatedAt']));
+      allow delete: if isAdmin() || ownsResource();
     }
     match /artisans/{id} {
       allow read: if isMember();
