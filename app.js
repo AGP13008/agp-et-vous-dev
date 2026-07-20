@@ -249,7 +249,7 @@ const updateAdminBadgesWithTotals=updateAdminBadges;updateAdminBadges=async func
 
 const usefulInfoButton=document.createElement("button");
 usefulInfoButton.dataset.memberSection="usefulInfo";
-usefulInfoButton.innerHTML='<span>ℹ️</span><div><b>Infos utiles du Grand Pavois</b><small>Accès, sécurité et contacts</small></div><span class="section-total-badge">1</span>';
+usefulInfoButton.innerHTML='<span>ℹ️</span><div><b>Infos utiles du Grand Pavois</b><small>Accès, sécurité et contacts</small></div>';
 document.querySelector(".member-life-grid").appendChild(usefulInfoButton);
 usefulInfoButton.onclick=()=>{if(!currentUser)return openLogin();route("member");renderUsefulGrandPavoisInfo();};
 
