@@ -207,10 +207,12 @@ const installButton=document.createElement("button");installButton.className="in
 const installPanel=document.createElement("div");installPanel.className="install-panel";installPanel.hidden=true;installPanel.innerHTML='<div><button class="install-close" aria-label="Fermer">×</button><img src="assets/icon-tour-192.png" alt="La tour du Grand Pavois"><h2>Installer AGP & Vous</h2><p id="installHelp"></p></div>';document.body.appendChild(installPanel);
 const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 const isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
-if(isIos&&!isStandalone())installButton.hidden=false;
+const isAndroid=/android/i.test(navigator.userAgent);
+const isEmbeddedBrowser=/FBAN|FBAV|Instagram|WhatsApp|wv\)/i.test(navigator.userAgent);
+if((isIos||isAndroid)&&!isStandalone())installButton.hidden=false;
 addEventListener("beforeinstallprompt",event=>{event.preventDefault();installPrompt=event;if(!isStandalone())installButton.hidden=false;});
 addEventListener("appinstalled",()=>{installPrompt=null;installButton.hidden=true;installPanel.hidden=true;});
-installButton.onclick=async()=>{if(installPrompt){await installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;installButton.hidden=true;return;}$("installHelp").innerHTML=isIos?'Dans Safari, touchez <b>Partager</b> puis <b>Sur l’écran d’accueil</b>.':'Ouvrez le menu de votre navigateur puis choisissez <b>Installer l’application</b> ou <b>Ajouter à l’écran d’accueil</b>.';installPanel.hidden=false;};
+installButton.onclick=async()=>{if(installPrompt){await installPrompt.prompt();const choice=await installPrompt.userChoice;if(choice.outcome==="accepted")installButton.hidden=true;installPrompt=null;return;}if(isIos)$("installHelp").innerHTML='Dans <b>Safari</b>, touchez <b>Partager</b> puis <b>Sur l’écran d’accueil</b>.';else if(isAndroid&&isEmbeddedBrowser)$("installHelp").innerHTML='Cette page est ouverte dans un navigateur intégré. Touchez le menu <b>⋮</b>, choisissez <b>Ouvrir dans Chrome</b>, puis dans Chrome : <b>⋮ → Ajouter à l’écran d’accueil → Installer</b>.';else if(isAndroid)$("installHelp").innerHTML='Dans <b>Google Chrome</b>, touchez <b>⋮</b> en haut à droite, puis <b>Ajouter à l’écran d’accueil</b> et <b>Installer</b>. Si cette option n’apparaît pas dans le navigateur Xiaomi, ouvrez la même adresse dans Chrome.';else $("installHelp").innerHTML='Ouvrez le menu de votre navigateur puis choisissez <b>Installer l’application</b> ou <b>Ajouter à l’écran d’accueil</b>.';installPanel.hidden=false;};
 installPanel.onclick=event=>{if(event.target===installPanel||event.target.closest(".install-close"))installPanel.hidden=true;};
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.warn));
 
